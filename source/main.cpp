@@ -21,6 +21,7 @@ void setup(void)
 {
   Serial.begin(9600);
   pinMode(BUTTON_PIN1,INPUT_PULLUP);
+  pinMode(BUTTON_PIN2,INPUT_PULLUP);
   P.begin(MAX_ZONES);
   P.setInvert(false);
   for (uint8_t i=0; i<MAX_ZONES; i++)
@@ -32,19 +33,15 @@ void setup(void)
 void loop(void)
 {
   // Handle serial input
-  String timeIn;
-  if (Serial.available()) {  // Set time manually with serial input
-    timeIn = Serial.readString();
-    timeIn.remove(timeIn.length()-1); // Remove trailing newline
-    t_has_changed=1;
-    if(timeIn.length()!=4)timeIn.remove(0);
-  } 
+   static int clock_mode=0;
+   Serial.println(clock_mode);
   //clock(timeIn);
   // Handle button input
-  int button_state = button_control(BUTTON_PIN1);
-  if (button_state== HOLD) clock_mode++;
+  int button1_state = button_control(BUTTON_PIN1);
+  int button2_state = button_control(BUTTON_PIN2);
+  if (button1_state== HOLD) clock_mode++;
   clock_mode %= nMODES;
-  stopwatch(button_state);
+  select_mode(clock_mode,button1_state,button2_state);
 
   // Handle display
   if(!strcmp(currTime,prevTime)){

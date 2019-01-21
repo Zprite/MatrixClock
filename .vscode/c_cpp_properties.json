@@ -35,8 +35,8 @@
                 "C:/Users/Marcus/.platformio/packages/framework-arduinoavr/libraries/Temboo/src",
                 "C:/Users/Marcus/.platformio/packages/framework-arduinoavr/libraries/WiFi/src",
                 "C:/Users/Marcus/.platformio/packages/tool-unity",
-                "c:/Users/Marcus/Documents/PlatformIO/Projects/MatrixClock/include",
-                "c:/Users/Marcus/Documents/PlatformIO/Projects/MatrixClock/src",
+                "c:/Users/Marcus/Documents/GitHub/MatrixClock/include",
+                "c:/Users/Marcus/Documents/GitHub/MatrixClock/src",
                 ""
             ],
             "browse": {
@@ -74,8 +74,8 @@
                     "C:/Users/Marcus/.platformio/packages/framework-arduinoavr/libraries/Temboo/src",
                     "C:/Users/Marcus/.platformio/packages/framework-arduinoavr/libraries/WiFi/src",
                     "C:/Users/Marcus/.platformio/packages/tool-unity",
-                    "c:/Users/Marcus/Documents/PlatformIO/Projects/MatrixClock/include",
-                    "c:/Users/Marcus/Documents/PlatformIO/Projects/MatrixClock/src",
+                    "c:/Users/Marcus/Documents/GitHub/MatrixClock/include",
+                    "c:/Users/Marcus/Documents/GitHub/MatrixClock/src",
                     ""
                 ]
             },
