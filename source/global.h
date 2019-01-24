@@ -4,13 +4,14 @@
 #include <SPI.h>
 #include <string.h>
 
+#define BUZZER_PIN 4
 #define BUTTON_PIN1 3
 #define BUTTON_PIN2 2
 #define HOLD 2
 #define PUSH 1
 #define HOLD_TIME 300
 
-#define nMODES 2
+#define nMODES 3
 #define STOPWATCH 2
 #define MINS_SECS 1
 #define HRS_MINS 0
@@ -26,10 +27,11 @@
 #define SPEED_TIME  20
 #define PAUSE_TIME  0
 
+extern MD_Parola P = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
+
 // Turn on debug statements to the serial output
 extern const int DEBUG = 0;
 // Global variables
- extern bool t_has_changed=0;
  extern char buff_h [3]={'0','0','\0'};
  extern char buff_m[3]={'0','0','\0'};
  extern char input_buffer_h[3]={'0','0','\0'};
