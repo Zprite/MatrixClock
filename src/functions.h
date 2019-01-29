@@ -73,7 +73,7 @@ void print_date(){
 
 void stopwatch (int button1, int button2){
   
-  static uint8_t m,s;
+  static uint32_t m,s;
   static bool stop=1;
   static unsigned long stop_secs=0;
   static unsigned long start_secs=0;
@@ -106,6 +106,10 @@ void stopwatch (int button1, int button2){
     s %= 60;
     m %= 100; // Count up to 100 minutes
   }
+    Serial.println("M: ");
+    Serial.println(m);
+    Serial.println("S: ");
+    Serial.println(s);
     sprintf (char_top,"%02d",m); // Print to display
     sprintf (char_bottom,"%02d",s);
 }
