@@ -8,11 +8,9 @@
 
 void setup(void)
 {
+   // January 21, 2014 at 3am you would call:
+    // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
   Serial.begin(9600);
-  Serial.print("ZONE TOP: ");
-  Serial.println(char_top);
-  Serial.print("Zone bottom");
-  Serial.println(char_bottom);
   pinMode(BUTTON_PIN1,INPUT_PULLUP);
   pinMode(BUTTON_PIN2,INPUT_PULLUP);
   pinMode(BUZZER_PIN,OUTPUT);
@@ -31,7 +29,6 @@ void setup(void)
   // SDA -> SDA (A4)
   // SCL -> SCL (A5) 
    setup_rtc();
-
 }
 
 void loop(void)
@@ -40,7 +37,6 @@ void loop(void)
   Serial.println(char_top);
   Serial.print("Zone bottom");
   Serial.println(char_bottom);
-  
   select_mode();
   display(); // Update display 
 }

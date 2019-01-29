@@ -21,9 +21,9 @@ void setup_rtc(){
   }
 
   if (rtc.lostPower()) {
-    Serial.println("RTC lost power, lets set the time!");
+     Serial.println("RTC lost power, lets set the time!");
     // following line sets the RTC to the date & time this sketch was compiled
-    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+     //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
     // This line sets the RTC with an explicit date & time, for example to set
     // January 21, 2014 at 3am you would call:
     // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
@@ -71,6 +71,44 @@ void print_date(){
   sprintf (char_bottom,"%02d",now.month());
 }
 
+void stopwatch (int button1, int button2){
+  
+  static uint8_t m,s;
+  static bool stop=1;
+  static unsigned long stop_secs=0;
+  static unsigned long start_secs=0;
+  static unsigned long diff;
+  DateTime now = rtc.now();
+  
+  if (button2 == 1){
+    if (!stop){
+      stop=1;
+      stop_secs=now.secondstime();
+    }
+    diff= stop_secs;
+    m=0; // Update display variables
+    s=0;
+  }
+
+  if (button1==1){ // Each time user presses stop/start button
+    stop = !stop;
+    if (stop) 
+      stop_secs=now.secondstime(); // Store time when stopped
+
+    if (!stop){
+      start_secs=now.secondstime(); // Store time when started
+      diff += start_secs-stop_secs; // Subtracts total stopped time from millis() to display correct time
+    } 
+  }
+  if (!stop) {
+    s = (now.secondstime()-diff);  // Second counter = Seconds since 1/1/2000 - accumulative difference
+    m = (s/60);
+    s %= 60;
+    m %= 100; // Count up to 100 minutes
+  }
+    sprintf (char_top,"%02d",m); // Print to display
+    sprintf (char_bottom,"%02d",s);
+}
 
 void select_mode(){
 
@@ -91,7 +129,8 @@ void select_mode(){
   switch (clock_mode){
     case 0: 
       Serial.println("Mode: HH MM");
-      print_hh_mm();
+      stopwatch(button1_state,button2_state);
+     // print_hh_mm();
       break;
     case 1: 
       Serial.println("Mode: MM SS");
