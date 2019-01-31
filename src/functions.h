@@ -39,11 +39,15 @@ int button_control (uint8_t buttonPin){ //Button needs to use a pull-up resistor
       while (!digitalRead(buttonPin)) {
           if ( millis()-prevMillis > HOLD_TIME) held= 1;
       }
-      if (held) 
-        return 2; 
+      static unsigned long exit_millis;
+      if (held) {
+        if (millis()-exit_millis > 50){ // To remove accidental "double" inputs
+          exit_millis=millis();
+          return 2; // If pressed
+        }
+      }
 
       else{
-        static unsigned long exit_millis;
         if (millis()-exit_millis > 50){ // To remove accidental "double" inputs
           exit_millis=millis();
           return 1; // If pressed
@@ -106,16 +110,111 @@ void stopwatch (int button1, int button2){
     s %= 60;
     m %= 100; // Count up to 100 minutes
   }
-    Serial.println("M: ");
-    Serial.println(m);
-    Serial.println("S: ");
-    Serial.println(s);
     sprintf (char_top,"%02d",m); // Print to display
     sprintf (char_bottom,"%02d",s);
 }
 
-void select_mode(){
+bool timer_core(bool reset, unsigned long start_seconds, int h, int m){
+  DateTime now = rtc.now();
+  static int h_count=0;
+  if (reset){ // Reset static variables
+    h_count=0;
+  }  
 
+  for (uint8_t i=0;i<h_count;i++){
+    m+=60;
+    h--;
+  }
+
+  m -= (now.secondstime()-start_seconds); 
+  if (m<0){
+    h_count++;
+    m=0; // To prevent display from briefly showing -1
+  }
+
+  sprintf (char_top,"%02d",h); // Print to display
+  sprintf (char_bottom,"%02d",m);
+
+  if (h==0 && m==0){ // Return 1 when timer reaches 0
+    h_count=0;
+    return 1;
+  }
+  return 0;
+}
+
+void set_timer(int button1, int button2){
+  DateTime now = rtc.now();
+  static uint8_t h = 0;
+  static uint8_t m = 10;
+  static bool start = 0;
+  static bool reset=0;
+  static unsigned long start_seconds=0;
+  if (start==0)  
+    sprintf (char_top,"%02d",h); // Print to display
+    sprintf (char_bottom,"%02d",m);
+
+  if (start==1){
+    if (timer_core(reset,start_seconds,h,m)==1){ // Run core timer function while checking if timer has reached 00.00
+      while(button_control(BUTTON_PIN1)!=1){
+        digitalWrite(BUZZER_PIN,HIGH);
+      }
+      start=0;
+    } 
+    reset = 0;
+  }
+
+  if (button1==PUSH && start==0){
+    start = 1;
+    start_seconds=now.secondstime();
+  }
+  else if (button1==PUSH && start==1){
+    start = 0;
+    reset=1;
+  }
+
+  if (button2==PUSH && start==0)
+    h++;
+  if (button2==HOLD && start==0)
+    m++;
+}
+
+void alarm(int button1, int button2,bool set_mode){
+  DateTime now = rtc.now();
+  static uint8_t h = 0;
+  static uint8_t m = 0;
+  static bool start = 0;
+
+  if (set_mode == 1){
+    sprintf (char_top,"%02d",h); // Print to display
+    sprintf (char_bottom,"%02d",m);
+
+    if (button1==PUSH) // Set / disable alarm with button 1
+      start=!start;
+    else if (button2==PUSH && start == 0){  // Get button input to set alarm
+      h++;
+      h %=24;
+    } 
+    else if (button2==HOLD && start == 0){
+      m++;
+      m %= 60;
+    }
+    
+  } 
+  
+  if (start==1){
+    if(set_mode == 1)digitalWrite(BUZZER_PIN,HIGH); // CHANGE TO LED PIN LATER!!!!!!!!
+    if (h== now.hour() && m == now.minute()){ // Check time
+      display();
+      while(button_control(BUTTON_PIN1)!=1){ // Sound buzzer until user input is recieved
+        digitalWrite(BUZZER_PIN,HIGH);
+      }
+      start=0;
+    } 
+  }
+}
+ 
+void select_mode(){
+  DateTime now = rtc.now();
   int button1_state = button_control(BUTTON_PIN1);
   int button2_state = button_control(BUTTON_PIN2);
   static unsigned long buzz_millis;
@@ -132,17 +231,17 @@ void select_mode(){
 
   switch (clock_mode){
     case 0: 
-      Serial.println("Mode: HH MM");
-      stopwatch(button1_state,button2_state);
-     // print_hh_mm();
+      print_hh_mm();
+      alarm(button1_state,button2_state,0);
       break;
     case 1: 
       Serial.println("Mode: MM SS");
-      print_mm_ss();
+      //  print_mm_ss();
+      alarm(button1_state,button2_state,1);
       break;
-    case 2:
-      Serial.println("Mode: DATE");
-      print_date();
-      break;
+   // case 2:
+   //   Serial.println("Mode: DATE");
+   //   print_date();
+   //   break;
   }
 }
