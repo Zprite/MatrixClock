@@ -22,11 +22,7 @@ void setup_rtc(){
 
   if (rtc.lostPower()) {
      Serial.println("RTC lost power, lets set the time!");
-    // following line sets the RTC to the date & time this sketch was compiled
-     //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-    // This line sets the RTC with an explicit date & time, for example to set
-    // January 21, 2014 at 3am you would call:
-    // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
+
   }
 }
 
@@ -162,6 +158,28 @@ void set_timer(int button1, int button2){
     } 
     reset = 0;
   }
+void alarm(int button1, int button2,bool set_mode){
+  DateTime now = rtc.now();
+  static uint8_t h = 0;
+  static uint8_t m = 0;
+  static bool start = 0;
+
+  if (set_mode == 1){
+    sprintf (char_top,"%02d",h); // Print to display
+    sprintf (char_bottom,"%02d",m);
+
+    if (button1==PUSH) // Set / disable alarm with button 1
+      start=!start;
+    else if (button2==PUSH && start == 0){  // Get button input to set alarm
+      h++;
+      h %=24;
+    } 
+    else if (button2==HOLD && start == 0){
+      m++;
+      m %= 60;
+    }
+    
+  } 
 
   if (button1==PUSH && start==0){
     start = 1;
@@ -185,21 +203,21 @@ void alarm(int button1, int button2,bool set_mode){
   static bool start = 0;
 
   if (set_mode == 1){
-    sprintf (char_top,"%02d",h); // Print to display
-    sprintf (char_bottom,"%02d",m);
 
     if (button1==PUSH) // Set / disable alarm with button 1
       start=!start;
     else if (button2==PUSH && start == 0){  // Get button input to set alarm
       h++;
-      h %=24;
+      h %= 24;
     } 
     else if (button2==HOLD && start == 0){
       m++;
       m %= 60;
     }
-    
-  } 
+
+    sprintf (char_top,"%02d",h); // Print to display
+    sprintf (char_bottom,"%02d",m);
+  }
   
   if (start==1){
     if(set_mode == 1)digitalWrite(BUZZER_PIN,HIGH); // CHANGE TO LED PIN LATER!!!!!!!!
@@ -211,6 +229,27 @@ void alarm(int button1, int button2,bool set_mode){
       start=0;
     } 
   }
+}
+
+void set_time(int button1, int button2){
+  static uint8_t h,m;
+  if (button1==PUSH){ // Set time with button 1
+    rtc.adjust(DateTime(F(__DATE__),h,m,0);
+    // This line sets the RTC with an explicit date & time, for example to set
+    // January 21, 2014 at 3am you would call:
+    // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
+  } 
+  else if (button2==PUSH && start == 0){  // Get button input to set alarm
+    h++;
+    h %= 24;
+  } 
+  else if (button2==HOLD && start == 0){
+    m++;
+    m %= 60;
+  }
+
+  sprintf (char_top,"%02d",h); // Print to display
+  sprintf (char_bottom,"%02d",m);
 }
  
 void select_mode(){
