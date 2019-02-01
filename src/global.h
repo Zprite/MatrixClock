@@ -13,7 +13,7 @@
 #define PUSH 1
 #define HOLD_TIME 300
 
-#define nMODES 2
+#define nMODES 4        // Number of clock modes
 #define STOPWATCH 2
 #define MINS_SECS 1
 #define HRS_MINS 0
