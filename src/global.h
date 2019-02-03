@@ -9,23 +9,25 @@
 #define BUZZER_PIN 4
 #define BUTTON_PIN1 3
 #define BUTTON_PIN2 2
-#define HOLD 2
-#define PUSH 1
-#define HOLD_TIME 300
-
-#define nMODES 4        // Number of clock modes
-#define STOPWATCH 2
-#define MINS_SECS 1
-#define HRS_MINS 0
+#define CLK_PIN   13
+#define DATA_PIN  11
+#define CS_PIN    10
 
 #define HARDWARE_TYPE MD_MAX72XX::FC16_HW
 #define MAX_DEVICES 4
 #define MAX_ZONES   2
 #define ZONE_SIZE (MAX_DEVICES/MAX_ZONES)
 
-#define CLK_PIN   13
-#define DATA_PIN  11
-#define CS_PIN    10
+#define nMODES 4        // Number of clock modes
+#define STOPWATCH 2
+#define MINS_SECS 1
+#define HRS_MINS 0
+
+#define HOLD 2
+#define PUSH 1
+
+#define HOLD_TIME 300
+#define SCROLL_SPEED 50
 #define SPEED_TIME  20
 #define PAUSE_TIME  0
 
@@ -37,4 +39,3 @@ extern const int DEBUG = 0;
  extern char char_top[3]={'0','0','\0'};
  extern char char_bottom[3]={'0','0','\0'};
 
- 

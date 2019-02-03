@@ -1,14 +1,28 @@
 #include <Arduino.h>
 #include <global.h>
+#include <Font_Data.h>
 #include <MD_Parola.h>
 #include <MD_MAX72xx.h>
 #include <SPI.h>
-#include <string.h>
 
 void display(){
+  P.setFont(0, nullptr);
+  P.setFont(1, nullptr);
   static uint8_t  curZone = 0;
   P.displayZoneText (1,char_top, PA_CENTER, SPEED_TIME, PAUSE_TIME, PA_PRINT ,PA_NO_EFFECT);
   P.displayZoneText (0,char_bottom, PA_CENTER, SPEED_TIME, PAUSE_TIME, PA_PRINT ,PA_NO_EFFECT);
+  while (!P.getZoneStatus (curZone))
+    P.displayAnimate(); // Refresh display
+}
+
+void display_text(char *input_string){        
+  P.displayClear(1);
+  P.displayClear(0);
+  P.setFont(0, BigFontLower);
+  P.setFont(1, BigFontUpper);
+  P.displayZoneText(1, input_string, PA_LEFT, SCROLL_SPEED, 0, PA_SCROLL_LEFT, PA_SCROLL_LEFT);
+  P.displayZoneText(0, input_string, PA_RIGHT, SCROLL_SPEED, 0, PA_SCROLL_LEFT, PA_SCROLL_LEFT);
+  static uint8_t  curZone = 1;
   while (!P.getZoneStatus (curZone))
     P.displayAnimate(); // Refresh display
 }
@@ -60,13 +74,23 @@ int button_control (uint8_t buttonPin){ //Button needs to use a pull-up resistor
 
 bool set_time(int button1, int button2){
   static uint8_t month,day,h,m;
-  static bool change_date=1,set;
+  static bool change_date=1,print_datemsg=1,print_timemsg=1,set;
+ 
+  if(print_datemsg==1){ // Print descriptive message to display
+      display_text("SET DATE");
+      print_datemsg=0;
+    }
+
   if (button1==PUSH){ // Set time with button 1
     if(!change_date) // Set clock when date and time has been set
       set=1;
     change_date = !change_date;
+    if(print_timemsg==1 && change_date ==0){ // Print descriptive message to display
+      display_text("SET TIME");
+      print_timemsg=0;
+    }
     if(set){
-      rtc.adjust(DateTime(2019, day, month, h, m, 0)); // Write time to RTC
+      rtc.adjust(DateTime(2019, month, day, h, m, 0)); // Write time to RTC
       digitalWrite(BUZZER_PIN , HIGH);
       delay(100);
       digitalWrite(BUZZER_PIN , LOW);
@@ -74,30 +98,34 @@ bool set_time(int button1, int button2){
       day=0;
       h=0;
       m=0;
+      print_datemsg=1;
+      print_timemsg=1;
+      set =0;
+      display_text("TIME SET!");
       return 1;
     }
   } 
-  else if (button2==HOLD){  // Get input
+  else if (button2==PUSH){  // Get input
     if (change_date){
       day++;
       day%=32;
-      if(day==0) day++;
+      if(day == 0) day++;
     }
     else{
-      h++;
-      h %= 24;
+      m++;
+      m %=60;
     }
   } 
 
-  else if (button2==PUSH){ // Get input
+  else if (button2==HOLD){ // Get input
     if (change_date){
       month++;
       month%=13;
       if (month == 0) month++;
     }
     else{
-      m++;
-      m %= 60;
+      h++;
+      h %= 24;
     }
   }
 
@@ -111,7 +139,6 @@ bool set_time(int button1, int button2){
   }
  return 0;
 }
-
 
 void print_hh_mm(){
   DateTime now = rtc.now();
@@ -127,9 +154,82 @@ void print_mm_ss(){
 
 void print_date(){
   DateTime now = rtc.now();
-  sprintf (char_top,"%02d",now.day());
-  sprintf (char_bottom,"%02d",now.month());
+  sprintf (char_top,"%02d",now.month());
+  sprintf (char_bottom,"%02d",now.day());
 }
+
+void default_clock(int button1, int button2){
+  static uint8_t mode;
+  static bool set_date;
+
+  if(button1 == PUSH){
+    mode++;
+    mode %= 3;
+  }
+  else if (button2 == HOLD)
+    set_date=1;
+  
+  if(set_date==1){
+    if(set_time(button1,button2)==1){
+      set_date = 0; // Exit function
+      mode=0; // Reset mode
+    }
+  }
+  else if (set_date==0){
+    switch(mode){
+      case 0: 
+        print_hh_mm();
+        break;
+      case 1:
+        print_mm_ss();
+        break;
+      case 2:
+        print_date();
+        break;
+    }    
+  }
+}
+
+void alarm(int button1, int button2,bool setmode){
+  DateTime now = rtc.now();
+  static uint8_t h = 0;
+  static uint8_t m = 0;
+  static bool start = 0, displaymsg=1;
+
+  if (setmode == 1){
+    sprintf (char_top,"%02d",h); // Print to display
+    sprintf (char_bottom,"%02d",m);
+
+    if (button1==PUSH) // Set / disable alarm with button 1
+      start=!start;
+    else if (button2==PUSH && start == 0){
+      m++;
+      m %= 60;
+    }
+      else if (button2==HOLD && start == 0){  // Get button input to set alarm
+      h++;
+      h %=24;
+    } 
+  } 
+  
+  if (start==1){
+    if(setmode==1 && displaymsg==1){
+      display_text("ALARM SET!");
+      displaymsg=0;
+    }
+    if(setmode == 1)digitalWrite(BUZZER_PIN,HIGH); // CHANGE TO LED PIN LATER, AND REMOVE IF STATEMENT
+    if (h== now.hour() && m == now.minute()){ // Check time
+      print_hh_mm();
+      display();
+      while(button_control(BUTTON_PIN1)!=1){ // Sound buzzer until user input is recieved
+        digitalWrite(BUZZER_PIN,HIGH);
+      }
+      start=0;
+      displaymsg=1;
+    } 
+  }
+}
+
 
 void stopwatch (int button1, int button2){
   
@@ -168,7 +268,7 @@ void stopwatch (int button1, int button2){
   }
     sprintf (char_top,"%02d",m); // Print to display
     sprintf (char_bottom,"%02d",s);
-}
+} 
 
 bool timer_core(bool reset, unsigned long start_seconds, int h, int m){
   DateTime now = rtc.now();
@@ -235,103 +335,51 @@ void set_timer(int button1, int button2){
     m++;
 }
 
-void alarm(int button1, int button2,bool set_mode){
-  DateTime now = rtc.now();
-  static uint8_t h = 0;
-  static uint8_t m = 0;
-  static bool start = 0;
-
-  if (set_mode == 1){
-    sprintf (char_top,"%02d",h); // Print to display
-    sprintf (char_bottom,"%02d",m);
-
-    if (button1==PUSH) // Set / disable alarm with button 1
-      start=!start;
-    else if (button2==PUSH && start == 0){  // Get button input to set alarm
-      h++;
-      h %=24;
-    } 
-    else if (button2==HOLD && start == 0){
-      m++;
-      m %= 60;
-    }
-    
-  } 
-  
-  if (start==1){
-    if(set_mode == 1)digitalWrite(BUZZER_PIN,HIGH); // CHANGE TO LED PIN LATER!!!!!!!!
-    if (h== now.hour() && m == now.minute()){ // Check time
-      print_hh_mm();
-      display();
-      while(button_control(BUTTON_PIN1)!=1){ // Sound buzzer until user input is recieved
-        digitalWrite(BUZZER_PIN,HIGH);
-      }
-      start=0;
-    } 
-  }
-}
-
-void default_clock(int button1, int button2){
-  static uint8_t mode;
-  static bool set_date = 0;
-  if(button1 == PUSH){
-    mode++;
-    mode %= 3;
-  }
-  else if (button2 == HOLD)
-    set_date=1;
-  
-  if(set_date==1){
-    if(set_time(button1,button2)==1){
-      set_date = 0; // Exit function
-      mode=0; // Reset mode
-    }
-  }
-  else if (set_date==0){
-    switch(mode){
-      case 0: 
-        print_hh_mm();
-        break;
-      case 1:
-        print_mm_ss();
-        break;
-      case 2:
-        print_date();
-        break;
-    }    
-  }
-}
-
-
 void select_mode(){
-  DateTime now = rtc.now();
   int button1_state = button_control(BUTTON_PIN1);
   int button2_state = button_control(BUTTON_PIN2);
   static unsigned long buzz_millis;
   static int clock_mode=0;
+  static bool switched_mode;
 
-  if (button1_state== HOLD){
+  if (button1_state== HOLD){ // Change mode
     clock_mode++;
     clock_mode %= nMODES;
+    switched_mode=1;
     buzz_millis=millis();
     digitalWrite(BUZZER_PIN,HIGH);
   } 
-  if(millis()-buzz_millis > 300)  
+  if(millis()-buzz_millis > 300) 
     digitalWrite(BUZZER_PIN,LOW);
 
   switch (clock_mode){
     case 0: 
+      if(switched_mode==1){  // Display descriptive text when switching mode
+        switched_mode=0;
+        display_text("CLOCK"); 
+      }
       alarm(button1_state,button2_state,0); // Check alarm
       default_clock(button1_state,button2_state);
       break;
     case 1: 
+      if(switched_mode==1){  // Display descriptive text when switching mode
+        switched_mode=0;
+        display_text("ALARM"); 
+      }
       alarm(button1_state,button2_state,1); // Use alarm in set mode.
       break;
     case 2:
+      if(switched_mode==1){ // Display descriptive text when switching mode
+        switched_mode=0;
+        display_text("TIMER"); 
+      }
       set_timer(button1_state,button2_state);
       break;
-    case 3:
-      alarm(button1_state,button2_state,0); // Check alarm
+    case 3: 
+      if(switched_mode==1){  // Display descriptive text when switching mode
+        switched_mode=0;
+        display_text("STOPWATCH"); 
+      }
       stopwatch(button1_state,button2_state);
       break;
   }
