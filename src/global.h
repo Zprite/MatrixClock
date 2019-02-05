@@ -7,6 +7,7 @@
 #include "RTClib.h"
 
 #define BUZZER_PIN 4
+#define INTENSITY_PIN 9
 #define BUTTON_PIN1 3
 #define BUTTON_PIN2 2
 #define CLK_PIN   13
@@ -27,10 +28,11 @@
 #define PUSH 1
 
 #define HOLD_TIME 300
-#define SCROLL_SPEED 50
+#define SCROLL_SPEED 30
 #define SPEED_TIME  20
 #define PAUSE_TIME  0
 
+extern MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 extern MD_Parola P = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 extern RTC_DS3231 rtc;
 // Turn on debug statements to the serial output

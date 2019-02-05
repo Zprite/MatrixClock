@@ -27,23 +27,6 @@ void display_text(char *input_string){
     P.displayAnimate(); // Refresh display
 }
 
-void setup_rtc(){
-
-  if (! rtc.begin()) {
-    Serial.println("Couldn't find RTC");
-    while (1);
-  }
-
-  if (rtc.lostPower()) {
-     Serial.println("RTC lost power, lets set the time!");
-    // following line sets the RTC to the date & time this sketch was compiled
-     //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-    // This line sets the RTC with an explicit date & time, for example to set
-    // January 21, 2014 at 3am you would call:
-    // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
-  }
-}
-
 int button_control (uint8_t buttonPin){ //Button needs to use a pull-up resistor!
     bool input = digitalRead (buttonPin);
     bool held = 0;
@@ -72,7 +55,17 @@ int button_control (uint8_t buttonPin){ //Button needs to use a pull-up resistor
 }
 
 
-bool set_time(int button1, int button2){
+void intesinty_control(uint8_t button){
+	static uint8_t intensity;
+	if(button_control(button)==1){
+    intensity+=3;
+    intensity %= 12;
+    P.setIntensity(intensity);
+  }
+}
+
+
+bool set_time(uint8_t button1, uint8_t button2){
   static uint8_t month,day,h,m;
   static bool change_date=1,print_datemsg=1,print_timemsg=1,set;
  
@@ -158,7 +151,7 @@ void print_date(){
   sprintf (char_bottom,"%02d",now.day());
 }
 
-void default_clock(int button1, int button2){
+void default_clock(uint8_t button1, uint8_t button2){
   static uint8_t mode;
   static bool set_date;
 
@@ -190,7 +183,7 @@ void default_clock(int button1, int button2){
   }
 }
 
-void alarm(int button1, int button2,bool setmode){
+void alarm(uint8_t button1, uint8_t button2, bool setmode){
   DateTime now = rtc.now();
   static uint8_t h = 0;
   static uint8_t m = 0;
@@ -231,7 +224,7 @@ void alarm(int button1, int button2,bool setmode){
 }
 
 
-void stopwatch (int button1, int button2){
+void stopwatch (uint8_t button1, uint8_t button2){
   
   static uint32_t m,s;
   static bool stop=1;
@@ -298,7 +291,7 @@ bool timer_core(bool reset, unsigned long start_seconds, int h, int m){
   return 0;
 }
 
-void set_timer(int button1, int button2){
+void set_timer(uint8_t button1, uint8_t button2){
   DateTime now = rtc.now();
   static uint8_t h = 0;
   static uint8_t m = 10;
@@ -358,7 +351,7 @@ void select_mode(){
         switched_mode=0;
         display_text("CLOCK"); 
       }
-      alarm(button1_state,button2_state,0); // Check alarm
+      alarm(button1_state,button2_state,0); // Use alarm in check mode
       default_clock(button1_state,button2_state);
       break;
     case 1: 
@@ -373,6 +366,7 @@ void select_mode(){
         switched_mode=0;
         display_text("TIMER"); 
       }
+      alarm(button1_state,button2_state,0); // Use alarm in check mode
       set_timer(button1_state,button2_state);
       break;
     case 3: 
@@ -380,6 +374,7 @@ void select_mode(){
         switched_mode=0;
         display_text("STOPWATCH"); 
       }
+      alarm(button1_state,button2_state,0); // Use alarm in check mode
       stopwatch(button1_state,button2_state);
       break;
   }
