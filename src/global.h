@@ -37,7 +37,24 @@ extern MD_Parola P = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 extern RTC_DS3231 rtc;
 // Turn on debug statements to the serial output
 extern const int DEBUG = 0;
-// Global variablesd
+// Global variables
  extern char char_top[3]={'0','0','\0'};
  extern char char_bottom[3]={'0','0','\0'};
+
+//Functions
+ void display();
+ void display_text(char *input_string);
+ int button_control (uint8_t buttonPin);
+ void intesinty_control(uint8_t button);
+ void print_hh_mm();
+ void print_mm_ss();
+ void print_date();
+ void default_clock(uint8_t button1, uint8_t button2);
+ bool set_time(uint8_t button1, uint8_t button2);
+ void alarm(uint8_t button1, uint8_t button2, bool setmode);
+ void stopwatch (uint8_t button1, uint8_t button2);
+ bool timer_core(bool reset, unsigned long start_seconds, int h, int m);
+ void set_timer(uint8_t button1, uint8_t button2);
+ void select_mode();
+
 
